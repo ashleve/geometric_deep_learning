@@ -226,3 +226,5 @@ ipython_config.py
 
 /data
 /.idea
+
+/wandb
