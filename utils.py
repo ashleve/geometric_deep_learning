@@ -9,7 +9,6 @@ NUM_FEATURES = 3
 NUM_CLASSES = 10
 
 
-
 def get_graph_from_image(image, desired_nodes=75):
     # load the image and convert it to a floating point data type
     segments = slic(image, n_segments=desired_nodes, slic_zero=True)
