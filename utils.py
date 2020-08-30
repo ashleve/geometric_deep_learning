@@ -13,10 +13,6 @@ def get_graph_from_image(image, desired_nodes=75):
     # load the image and convert it to a floating point data type
     segments = slic(image, n_segments=desired_nodes, slic_zero=True)
 
-    print(f"SLIC number of segments: {len(np.unique(segments))}")
-    plt.plot(mark_boundaries(image, segments))
-    plt.show()
-
     asegments = np.array(segments)
 
     num_nodes = np.max(asegments)
