@@ -1,8 +1,9 @@
 from torch_geometric.datasets import Planetoid
 import torch
 import torch.nn.functional as F
-from torch_geometric.nn import GCNConv
+from torch_geometric.nn import GCNConv, ChebConv, SAGEConv
 import wandb
+from torch_geometric.utils.convert import to_networkx
 
 
 wandb.init(project="geometric_deep_learning")
