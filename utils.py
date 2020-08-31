@@ -68,6 +68,7 @@ def get_graph_from_image(image, desired_nodes=75):
 
     # centers
     centers = np.array([np.mean(np.nonzero(segments == i), axis=1) for i in segments_ids])
+    centers = centers.astype(int)
 
     vs_right = np.vstack([segments[:, :-1].ravel(), segments[:, 1:].ravel()])
     vs_below = np.vstack([segments[:-1, :].ravel(), segments[1:, :].ravel()])
@@ -97,4 +98,5 @@ def get_graph_from_image(image, desired_nodes=75):
         h[i, :] = G.nodes[i]["features"]
     # end for
     del G
-    return h, edges
+
+    return h, edges, centers
