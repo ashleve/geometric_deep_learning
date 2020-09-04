@@ -35,7 +35,7 @@ class GCN(torch.nn.Module):
         x = F.relu(x)
         x = self.linear2(x)
 
-        return F.log_softmax(x)
+        return F.log_softmax(x, dim=0)
 
 
 class GAT(torch.nn.Module):
@@ -64,7 +64,7 @@ class GAT(torch.nn.Module):
         x = F.relu(x)
         x = self.linear2(x)
 
-        return F.log_softmax(x)
+        return F.log_softmax(x, dim=0)
 
 
 class SGCN(torch.nn.Module):
@@ -92,4 +92,4 @@ class SGCN(torch.nn.Module):
 
         x = self.linear(x)
 
-        return F.log_softmax(x)
+        return F.log_softmax(x, dim=0)

@@ -39,20 +39,6 @@ optimizer = torch.optim.Adam(model.parameters(), lr=config.learning_rate)
 config.optimizer = optimizer.__class__.__name__
 
 
-# init log
-total_correct, total_test_loss = evaluate(model, device, test_loader)
-_, total_train_loss = evaluate(model, device, train_loader)
-accuracy = total_correct * 100 / config.test_data_length
-train_loss = total_train_loss / config.train_data_length
-test_loss = total_test_loss / config.test_data_length
-wandb.log({
-    "train_loss": train_loss,
-    "test_loss": test_loss,
-    "accuracy": accuracy,
-})
-
-print("Training started...")
-
 for i in range(100):
 
     model.train()
@@ -61,7 +47,7 @@ for i in range(100):
     for data in train_loader:
         data = data.to(device)
         out = model(data)
-        target = torch.tensor(data.label).to(device)
+        target = data.label.to(device)
 
         optimizer.zero_grad()
         loss = F.nll_loss(out, target)
@@ -71,15 +57,11 @@ for i in range(100):
         total_train_loss += loss.item()
 
     total_correct, total_test_loss = evaluate(model, device, test_loader)
-    accuracy = total_correct * 100 / config.test_data_length
-
-    train_loss = total_train_loss / config.train_data_length
-    test_loss = total_test_loss / config.test_data_length
 
     wandb.log({
-        "train_loss": train_loss,
-        "test_loss": test_loss,
-        "accuracy": accuracy,
+        "train_loss": total_train_loss / config.train_data_length,
+        "test_loss": total_test_loss / config.test_data_length,
+        "accuracy": total_correct * 100 / config.test_data_length,
     })
 
-    print(f"Ep: {i}, Train loss: {train_loss:.4f}, Test loss: {test_loss:.4f}, Acc: {accuracy:.2f}%")
+    print(f"Ep: {i}")
