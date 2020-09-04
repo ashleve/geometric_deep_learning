@@ -1,7 +1,10 @@
+import torch
+import torch.nn.functional as F
 import numpy as np
 from skimage.segmentation import slic, mark_boundaries
 import networkx as nx
-import matplotlib.pyplot as plt
+
+
 NP_TORCH_FLOAT_DTYPE = np.float32
 NP_TORCH_LONG_DTYPE = np.int64
 
@@ -100,3 +103,20 @@ def get_graph_from_image(image, desired_nodes=75):
     del G
 
     return h, edges, centers
+
+
+def evaluate(model, device, test_loader):
+    model.eval()
+    total_correct = 0
+    loss = 0
+
+    for data in test_loader:
+        data = data.to(device)
+        out = model(data)
+        _, predicts = out.max(dim=1)
+        target = data.label.to(device)
+        loss += F.nll_loss(out, target).item()
+        correct = predicts.eq(target).sum().item()
+        total_correct += correct
+
+    return total_correct, loss
