@@ -5,10 +5,10 @@ from skimage.segmentation import slic, mark_boundaries
 import networkx as nx
 
 
-def get_graph_from_image(image, desired_nodes=75):
+def get_graph_from_image(image, desired_nodes=75, add_position_to_features=True):
     height = image.shape[0]
     width = image.shape[1]
-    num_of_features = image.shape[2]
+    num_of_features = image.shape[2] + 2 if add_position_to_features else image.shape[2]
 
     segments = slic(image, n_segments=desired_nodes, slic_zero=True)
 
@@ -24,15 +24,25 @@ def get_graph_from_image(image, desired_nodes=75):
     for y in range(height):
         for x in range(width):
             node = segments[y, x]
+
             rgb = image[y, x, :]
             nodes[node]["rgb_list"].append(rgb)
+
+            pos = np.array([float(x) / width, float(y) / height])
+            nodes[node]["pos_list"].append(pos)
 
     # compute features (from rgb only)
     G = nx.Graph()
     for node in nodes:
         nodes[node]["rgb_list"] = np.stack(nodes[node]["rgb_list"])
+        nodes[node]["pos_list"] = np.stack(nodes[node]["pos_list"])
         rgb_mean = np.mean(nodes[node]["rgb_list"], axis=0)
-        G.add_node(node, features=list(rgb_mean))
+        pos_mean = np.mean(nodes[node]["pos_list"], axis=0)
+        if add_position_to_features:
+            features = np.concatenate((rgb_mean, pos_mean))
+        else:
+            features = rgb_mean
+        G.add_node(node, features=list(features))
 
     # compute node positions
     segments_ids = np.unique(segments)
