@@ -6,13 +6,17 @@ from utils import evaluate
 import wandb
 
 
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+print(device)
+
+print("Reading dataset...")
 train_data = torch.load("data/MNISTSuperpixels_train_data.pt")
 test_data = torch.load("data/MNISTSuperpixels_test_data.pt")
-print(len(train_data))
-print(len(test_data))
+print("Train data length:", len(train_data))
+print("Test data length:", len(test_data))
 
 
-wandb.init(project="Superpixels_MNIST", group="Simple_GCN", job_type="eval")
+wandb.init(project="Superpixels_MNIST", group="GAT", job_type="eval")
 config = wandb.config
 config.train_data_length = len(train_data)
 config.test_data_length = len(test_data)
@@ -20,6 +24,7 @@ config.num_node_features = train_data[0]['x'].shape[1]
 config.num_classes = 10
 config.batch_size = 32
 config.learning_rate = 0.001
+config.device = device.type
 
 
 train_loader = DataLoader(train_data, batch_size=config.batch_size, shuffle=True)
@@ -27,11 +32,8 @@ test_loader = DataLoader(test_data, batch_size=config.batch_size)
 del train_data
 del test_data
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-config.device = device.type
-print(device)
 
-model = GCN(config.num_node_features, config.num_classes)
+model = GAT(config.num_node_features, config.num_classes)
 model = model.to(device)
 wandb.watch(model)
 
