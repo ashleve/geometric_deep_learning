@@ -9,15 +9,37 @@ import wandb
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(device)
 
+DATASET_NAME = "MNISTSuperpixels"
+USE_POSITION_FEATURES = True
+
+path = "data/" + DATASET_NAME
+if USE_POSITION_FEATURES:
+    path += "_with_pos_features"
+path += "/"
+
+print(path)
 print("Reading dataset...")
-train_data = torch.load("data/MNISTSuperpixels_train_data.pt")
-test_data = torch.load("data/MNISTSuperpixels_test_data.pt")
+train_data = torch.load(path + DATASET_NAME + "_train_data.pt")
+test_data = torch.load(path + DATASET_NAME + "_test_data.pt")
 print("Train data length:", len(train_data))
 print("Test data length:", len(test_data))
+print(train_data[0])
+print(test_data[0])
+
+job_type = DATASET_NAME
+if USE_POSITION_FEATURES:
+    job_type += "_with_pos_features"
+
+wandb.init(
+    project="geometric_deep_learning_with_superpixels",
+    group="GAT",
+    job_type=job_type
+)
 
 
-wandb.init(project="Superpixels_MNIST", group="GAT", job_type="eval")
 config = wandb.config
+config.dataset = DATASET_NAME
+config.uses_position_features = USE_POSITION_FEATURES
 config.train_data_length = len(train_data)
 config.test_data_length = len(test_data)
 config.num_node_features = train_data[0]['x'].shape[1]
@@ -66,4 +88,4 @@ for i in range(100):
         "accuracy": total_correct * 100 / config.test_data_length,
     })
 
-    print(f"Ep: {i}")
+    print(f"Ep: {i}, Acc: {total_correct * 100 / config.test_data_length}")
