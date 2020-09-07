@@ -11,13 +11,18 @@ print(device)
 
 DATASET_NAME = "MNISTSuperpixels"
 USE_POSITION_FEATURES = True
+MODEL = GCN
 
 path = "data/" + DATASET_NAME
 if USE_POSITION_FEATURES:
     path += "_with_pos_features"
 path += "/"
 
-print(path)
+model_name = MODEL(1, 1).__class__.__name__
+
+print("Model:", model_name)
+print("Use position features:", USE_POSITION_FEATURES)
+print("Path:", path)
 print("Reading dataset...")
 train_data = torch.load(path + DATASET_NAME + "_train_data.pt")
 test_data = torch.load(path + DATASET_NAME + "_test_data.pt")
@@ -26,20 +31,20 @@ print("Test data length:", len(test_data))
 print(train_data[0])
 print(test_data[0])
 
-job_type = DATASET_NAME
 if USE_POSITION_FEATURES:
-    job_type += "_with_pos_features"
+    DATASET_NAME += "_with_pos_features"
 
 wandb.init(
     project="geometric_deep_learning_with_superpixels",
-    group="GAT",
-    job_type=job_type
+    group=model_name,
+    job_type=DATASET_NAME
 )
-
+print("Initialized wandb")
 
 config = wandb.config
 config.dataset = DATASET_NAME
 config.uses_position_features = USE_POSITION_FEATURES
+config.model = model_name
 config.train_data_length = len(train_data)
 config.test_data_length = len(test_data)
 config.num_node_features = train_data[0]['x'].shape[1]
@@ -55,7 +60,7 @@ del train_data
 del test_data
 
 
-model = GAT(config.num_node_features, config.num_classes)
+model = MODEL(config.num_node_features, config.num_classes)
 model = model.to(device)
 wandb.watch(model)
 
@@ -63,6 +68,7 @@ optimizer = torch.optim.Adam(model.parameters(), lr=config.learning_rate)
 config.optimizer = optimizer.__class__.__name__
 
 
+best_acc = 0
 for i in range(100):
 
     model.train()
@@ -82,10 +88,15 @@ for i in range(100):
 
     total_correct, total_test_loss = evaluate(model, device, test_loader)
 
+    acc = total_correct * 100 / config.test_data_length
+    if acc > best_acc:
+        best_acc = acc
+
     wandb.log({
         "train_loss": total_train_loss / config.train_data_length,
         "test_loss": total_test_loss / config.test_data_length,
-        "accuracy": total_correct * 100 / config.test_data_length,
+        "accuracy": acc,
+        "best_accuracy": best_acc
     })
 
-    print(f"Ep: {i}, Acc: {total_correct * 100 / config.test_data_length}")
+    print(f"Ep: {i}, acc: {acc}, best acc: {best_acc}")
