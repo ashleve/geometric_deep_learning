@@ -18,7 +18,7 @@ class SGCNConv(MessagePassing):
         self.lin_out = torch.nn.Linear(label_dim * out_channels_1, out_features)
         self.dropout = dropout
 
-    def forward(self, x, pos, edge_index):
+    def forward(self, x, edge_index, pos):
         """
         x - feature matrix of the whole graph [num_nodes, label_dim]
         pos - node position matrix [num_nodes, coors]

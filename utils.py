@@ -1,8 +1,27 @@
 import torch
 import torch.nn.functional as F
+from torch_geometric.data import Data
 import numpy as np
 from skimage.segmentation import slic, mark_boundaries
 import networkx as nx
+
+
+def process_superpixel_data(graphs, labels, DATASET_SPLIT_POINT):
+    data = []
+    for g, l in zip(graphs, labels):
+        x, edge_index, pos = g
+
+        x = torch.tensor(x, dtype=torch.float32)
+        edge_index = torch.tensor(edge_index, dtype=torch.long).T
+        pos = torch.tensor(pos, dtype=torch.float32)
+        label = torch.tensor(l, dtype=torch.int64)
+
+        graph = Data(x=x, edge_index=edge_index, pos=pos, label=label)
+        data.append(graph)
+
+    train_data = data[:DATASET_SPLIT_POINT]
+    test_data = data[DATASET_SPLIT_POINT:]
+    return train_data, test_data
 
 
 def get_graph_from_image(image, desired_nodes=75, add_position_to_features=True):
@@ -87,7 +106,7 @@ def evaluate(model, device, test_loader):
         data = data.to(device)
         out = model(data)
         _, predicts = out.max(dim=1)
-        target = data.label.to(device)
+        target = data.label
         loss += F.nll_loss(out, target).item()
         correct = predicts.eq(target).sum().item()
         total_correct += correct
